@@ -28,7 +28,9 @@ namespace wsfind
 
         static void DisplayRows(OleDbConnection connection)
         {
-            string queryInUse = $"SELECT System.ItemPathDisplay FROM SystemIndex {ConstructWhereClause()}";
+            string queryInUse = $"SELECT System.ItemPathDisplay FROM SystemIndex {WhereClause()}";
+
+            LogVerbose(queryInUse);
 
             OleDbDataAdapter adapter = new OleDbDataAdapter(queryInUse, connection);
             OleDbCommandBuilder commandBuilder = new OleDbCommandBuilder(adapter);
@@ -43,18 +45,18 @@ namespace wsfind
             }
         }
 
-        static string ConstructWhereClause()
+        static string WhereClause()
         {
             List<string> whereClause = new List<string>();
 
             foreach (KeyValuePair<string, string> contains in Options.ContainsProperties)
             {
-                whereClause.Add($"CONTAINS({contains.Key}, '{Quote(contains.Value)}')");
+                whereClause.Add($"CONTAINS({contains.Key}, {Quote(contains.Value)})");
             }
 
             foreach (KeyValuePair<string, string> freetext in Options.FreetextProperties)
             {
-                whereClause.Add($"FREETEXT({freetext.Key}, '{Quote(freetext.Value)}')");
+                whereClause.Add($"FREETEXT({freetext.Key}, {Quote(freetext.Value)})");
             }
 
             if (Options.Scope != null) {
@@ -76,6 +78,13 @@ namespace wsfind
             quoteBuilder.QuoteSuffix = "'";
 
             return quoteBuilder.QuoteIdentifier(unquoted);
+        }
+
+        static void LogVerbose(string logLine)
+        {
+            if (Options.Verbose) {
+                System.Console.Error.WriteLine(logLine);
+            }
         }
     }
 }
